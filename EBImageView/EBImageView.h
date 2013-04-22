@@ -50,13 +50,13 @@
 /**
  Checks if an image with the provided url is already cached to disk and loads
  it directly if this is the case. If not, starts an async request via
- AFNetworking to fetch the image and if successful, caches and loads it.
+ AFNetworking to fetch the image and if successful, caches and returns it.
  In any case, a callback is triggered indicating whether loading was successful
  or not, and if the load was from disk (cachedImage).
  */
 - (void)setImageWithURL:(NSURL *)url
        placeholderImage:(UIImage *)placeholderImage
-                success:(void (^)(BOOL cachedImage))success
+                success:(void (^)(UIImage *image, BOOL cachedImage))success
                 failure:(void (^)(void))failure;
 
 @end

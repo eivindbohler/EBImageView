@@ -66,56 +66,51 @@
 
 - (void)setImageWithURL:(NSURL *)url
        placeholderImage:(UIImage *)placeholderImage
-                success:(void (^)(BOOL))success
+                success:(void (^)(UIImage *, BOOL))success
                 failure:(void (^)(void))failure
 {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        _filePath = [self cachedPNGFilePathForURL:url];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:_filePath]) {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                self.image = [UIImage imageWithContentsOfFile:_filePath];
-                if (self.image) {
-                    if (success) {
-                        success(YES);
-                    }
-                } else {
-                    if (failure) {
-                        failure();
-                    }
-                }
-            });
+
+    _filePath = [self cachedPNGFilePathForURL:url];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:_filePath]) {
+        UIImage *image = [UIImage imageWithContentsOfFile:_filePath];
+        if (image) {
+            if (success) {
+                success(image, YES);
+            }
         } else {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                self.image = placeholderImage; // As we probably don't want to view an old image while downloading a new one
-            });
-            NSString *filePath = [_filePath copy];
-            NSURLRequest *urlRequest = [NSURLRequest requestWithURL:url];
-            EBImageView *weakSelf = self; // To avoid capturing self and possibly getting a circular reference
-            [self setImageWithURLRequest:urlRequest placeholderImage:placeholderImage success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
-                if (weakSelf.logRequests) {
-                    NSLog(@"%@ %@ %d", [request HTTPMethod], [request URL], [response statusCode]);
-                }
-                weakSelf.image = image;
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                    NSError *error = nil;
-                    [UIImagePNGRepresentation(image) writeToFile:filePath options:NSDataWritingAtomic error:&error];
-                    if (error) {
-                        NSLog(@"error: %@", error.localizedDescription);
-                    }
-                });
-                if (success) {
-                    success(NO);
-                }
-            } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
-                if (weakSelf.logRequests) {
-                    NSLog(@"%@ %@ %d", [request HTTPMethod], [request URL], [response statusCode]);
-                }
-                if (failure) {
-                    failure();
-                }
-            }];
+            if (failure) {
+                failure();
+            }
         }
-    });
+    } else {
+        self.image = placeholderImage; // As we probably don't want to view an old image while downloading a new one
+
+        NSString *filePath = [_filePath copy];
+        NSURLRequest *urlRequest = [NSURLRequest requestWithURL:url];
+        EBImageView *weakSelf = self; // To avoid capturing self and possibly getting a circular reference
+        [self setImageWithURLRequest:urlRequest placeholderImage:placeholderImage success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+            if (weakSelf.logRequests) {
+                NSLog(@"%@ %@ %d", [request HTTPMethod], [request URL], [response statusCode]);
+            }
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                NSError *error = nil;
+                [UIImagePNGRepresentation(image) writeToFile:filePath options:NSDataWritingAtomic error:&error];
+                if (error) {
+                    NSLog(@"error: %@", error.localizedDescription);
+                }
+            });
+            if (success) {
+                success(image, NO);
+            }
+        } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+            if (weakSelf.logRequests) {
+                NSLog(@"%@ %@ %d", [request HTTPMethod], [request URL], [response statusCode]);
+            }
+            if (failure) {
+                failure();
+            }
+        }];
+    }
 }
 
 #pragma mark - Private methods

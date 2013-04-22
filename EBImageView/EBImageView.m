@@ -42,6 +42,11 @@
 
 #pragma mark - Public methods
 
+- (void)cancelOngoingFetch
+{
+    [self cancelImageRequestOperation];
+}
+
 - (BOOL)isImageWithURLNew:(NSURL *)url
 {
     if (!self.image) {

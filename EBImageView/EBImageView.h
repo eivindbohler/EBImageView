@@ -32,6 +32,11 @@
 @property (assign, nonatomic) BOOL logRequests;
 
 /**
+ Cancels ongoing fetch
+ */
+- (void)cancelOngoingFetch;
+
+/**
  Returns YES if this instance of EBImageView has already loaded (and cached)
  an image with this url.
  */

@@ -90,7 +90,7 @@
         EBImageView *weakSelf = self; // To avoid capturing self and possibly getting a circular reference
         [self setImageWithURLRequest:urlRequest placeholderImage:placeholderImage success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
             if (weakSelf.logRequests) {
-                NSLog(@"%@ %@ %d", [request HTTPMethod], [request URL], [response statusCode]);
+                NSLog(@"%@ %@ %ld", [request HTTPMethod], [request URL], (long)[response statusCode]);
             }
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 NSError *error = nil;
@@ -104,7 +104,7 @@
             }
         } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
             if (weakSelf.logRequests) {
-                NSLog(@"%@ %@ %d", [request HTTPMethod], [request URL], [response statusCode]);
+                NSLog(@"%@ %@ %ld", [request HTTPMethod], [request URL], (long)[response statusCode]);
             }
             if (failure) {
                 failure();
